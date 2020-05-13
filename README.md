@@ -1,6 +1,10 @@
 # fakes
 inject realistic fakes onto ztf science images
 
+requires `psfex >= 3.21.1`, `sextractor >= 2.18.0`
+
+```pip install fakes```
+
 ```python
 import fakes
 from astropy.coordinates import SkyCoord
