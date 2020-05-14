@@ -1,3 +1,5 @@
-galsim>=2.2.3
+numpy>=1.18.0
+scipy>=1.4.1
 pytest>=5.3.1
+galsim>=2.2.3
 astropy>=4.0

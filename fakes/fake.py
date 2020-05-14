@@ -2,6 +2,7 @@ import os
 import pathlib
 import tempfile
 import subprocess
+import numpy as np
 from astropy.io import fits
 from astropy.wcs import WCS
 
@@ -18,10 +19,8 @@ def measure_psf(image, persist=False):
     a galsim DES_PSFEx object representing the PSF.  Sextractor and PSFex
     are used to model the PSF.
 
-
     Options
     -------
-
     persist: boolean,
         persist intermediate products produced by sextractor and psfex
         instead of deleting them immediately after this function is called
@@ -68,60 +67,77 @@ def measure_psf(image, persist=False):
 
 def inject_psf(image, mag, coord, psf=None, seed=None):
     """Realize the DES_PSFEx PSF model `psf` at location `coord` on
-    ZTF science image `image` (either an HDUList or image path) with
-    magnitude `mag` in the AB system, fluctuated by Poisson noise.
+    ZTF science image `image` (image path) with magnitude `mag` in
+    the AB system, fluctuated by Poisson noise.
 
     If `image` is passed as an HDUlist, must be opened in update mode.
     """
 
+    # initialize the random number generator
     import galsim
-
     rng = galsim.BaseDeviate(seed)
+
+    # handle both scalar and vector inputs
+    mag = np.atleast_1d(mag)
+    if coord.isscalar:
+        coord = coord.reshape([1])
+
     with fits.open(image, mode='update') as hdul:
 
+        # read in the WCS
         header = hdul[0].header
-        wcs = WCS(header)
+        wcs = WCS(header=header)
 
+        # measure the PSF using PSFEx if not already specified
         if psf is None:
             psf = measure_psf(image)
 
         # load the image into galsim
         gimage = galsim.fits.read(hdu_list=hdul)
 
-        # calculate the flux of the object
-        flux = 10**(-0.4 * (mag - header['MAGZP']))
+        # convert the world coordinates to pixel coordinates
+        ipos = wcs.all_world2pix(
+            [[pos.ra.deg, pos.dec.deg] for pos in coord], 1
+        )
 
-        # get the image coordinates of the psf
-        ix, iy = wcs.all_world2pix([[coord.ra.deg, coord.dec.deg]], 1)[0]
-        image_pos = galsim.PositionD(ix, iy)
-        iimage_pos = galsim.PositionI(round(ix), round(iy))
+        for mag, pos in zip(mag, ipos):
 
-        # get the noise
-        noise = galsim.PoissonNoise(rng)
+            # calculate the flux of the object
+            flux = 10 ** (-0.4 * (mag - header['MAGZP']))
 
-        # realize the psf at the coordinates
-        realization = psf.getPSF(image_pos).withFlux(flux)
+            image_pos = galsim.PositionD(*pos)
 
-        # get the local wcs
-        lwcs = psf.getLocalWCS(iimage_pos)
+            # store the center of the nearest integer pixel
+            iimage_pos = galsim.PositionI(*tuple(map(round, pos)))
 
-        # calculate the offset between the stamp center and the profile center
-        offset = image_pos - iimage_pos
+            # get the noise
+            noise = galsim.PoissonNoise(rng)
 
-        # draw the image
-        imout = realization.drawImage(wcs=lwcs, offset=offset, nx=NPIX, ny=NPIX)
+            # realize the psf at the coordinates
+            realization = psf.getPSF(image_pos).withFlux(flux)
 
-        # add the noise
-        imout.addNoise(noise)
+            # get the local wcs
+            lwcs = psf.getLocalWCS(iimage_pos)
 
-        # shift the image to the right spot
-        imout.setCenter(iimage_pos)
+            # calculate the offset between the stamp center
+            # and the profile center
+            offset = image_pos - iimage_pos
 
-        # get the bounds for inpainting
-        bounds = imout.bounds
+            # draw the image
+            imout = realization.drawImage(wcs=lwcs, offset=offset,
+                                          nx=NPIX, ny=NPIX)
 
-        # add the photons
-        gimage[bounds] = gimage[bounds] + imout
+            # add the noise
+            imout.addNoise(noise)
+
+            # shift the image to the right spot
+            imout.setCenter(iimage_pos)
+
+            # get the bounds for inpainting
+            bounds = imout.bounds
+
+            # add the photons
+            gimage[bounds] = gimage[bounds] + imout
 
         # save it as a new hdu
         galsim.fits.write(gimage, hdu_list=hdul)
