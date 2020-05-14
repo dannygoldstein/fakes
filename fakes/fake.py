@@ -1,5 +1,4 @@
 import os
-import time
 import pathlib
 import tempfile
 import subprocess
@@ -8,6 +7,10 @@ from astropy.wcs import WCS
 
 
 __all__ = ['measure_psf', 'inject_psf']
+
+
+# this needs to be odd
+NPIX = 31
 
 
 def measure_psf(image, persist=False):
@@ -91,7 +94,7 @@ def inject_psf(image, mag, coord, psf=None, seed=None):
         # get the image coordinates of the psf
         ix, iy = wcs.all_world2pix([[coord.ra.deg, coord.dec.deg]], 1)[0]
         image_pos = galsim.PositionD(ix, iy)
-        iimage_pos = galsim.PositionI(int(ix), int(iy))
+        iimage_pos = galsim.PositionI(round(ix), round(iy))
 
         # get the noise
         noise = galsim.PoissonNoise(rng)
@@ -102,8 +105,11 @@ def inject_psf(image, mag, coord, psf=None, seed=None):
         # get the local wcs
         lwcs = psf.getLocalWCS(iimage_pos)
 
+        # calculate the offset between the stamp center and the profile center
+        offset = image_pos - iimage_pos
+
         # draw the image
-        imout = realization.drawImage(wcs=lwcs)
+        imout = realization.drawImage(wcs=lwcs, offset=offset, nx=NPIX, ny=NPIX)
 
         # add the noise
         imout.addNoise(noise)
