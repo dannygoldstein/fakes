@@ -4,3 +4,4 @@ pytest>=5.3.1
 galsim>=2.2.3
 astropy>=4.0
 requests>=2.23.0
+photutils>=0.7.2

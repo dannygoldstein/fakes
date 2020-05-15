@@ -11,7 +11,7 @@ from astropy import units as u
 N_FAKE = 4
 
 
-def test_fakes(science_image):
+def test_recovered_astrometry(science_image):
     with fits.open(science_image) as hdul:
         header = hdul[0].header
         wcs = WCS(header)
@@ -46,7 +46,7 @@ def test_fakes(science_image):
     # match fakes to measured stuff
     insky = SkyCoord(catalog['fake_ra'], catalog['fake_dec'], unit='deg')
     outsky = SkyCoord(meascat['X_WORLD'], meascat['Y_WORLD'], unit='deg')
-    i1, i2, sep, _ = insky.search_around_sky(outsky, seplimit=0.5 * u.arcsec)
+    i1, i2, sep, _ = insky.search_around_sky(outsky, seplimit=0.2 * u.arcsec)
 
     # assert that all fakes are detected and that measured fake positions
     # agree with the input positions to within 0.5"

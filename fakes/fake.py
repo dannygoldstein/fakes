@@ -145,10 +145,6 @@ def inject_psf(image, mags, coord, psf=None, seed=None):
             imout = realization.drawImage(wcs=lwcs, offset=offset,
                                           nx=NPIX * 2 + 1, ny=NPIX * 2 + 1)
 
-            # renomalize the image such that a PSF-weighted sum of the
-            # object pixels would result in a value equal to `flux`
-            imout /= np.sum(imout.array * imout.array) / (flux * flux)
-
             # add the noise
             imout.addNoise(noise)
 
