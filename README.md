@@ -8,6 +8,10 @@ requires `psfex >= 3.21.1`, `sextractor >= 2.18.0`, I recommend installing these
 
 `$ conda install -c conda-forge astromatic-source-extractor astromatic-psfex`
 
+To see the tests pass:
+
+`$ py.test`
+
 To use:
 
 ```python
