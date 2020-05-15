@@ -2,7 +2,7 @@
 
 `$ pip install fakes`
 
-inject realistic fakes onto ztf science images
+inject realistic fakes onto ztf science images using psfex to model the PSF
 
 requires `psfex >= 3.21.1`, `sextractor >= 2.18.0`, I recommend installing these via conda-forge:
 
