@@ -66,7 +66,7 @@ def measure_psf(image, persist=False):
     return psf
 
 
-def inject_psf(image, mags, coord, psf=None, seed=None):
+def inject_psf(image, mag, coord, psf=None, seed=None):
     """Realize the DES_PSFEx PSF model `psf` at location `coord` on
     ZTF science image `image` (image path) with magnitude `mag` in
     the AB system, fluctuated by Poisson noise.
@@ -79,7 +79,7 @@ def inject_psf(image, mags, coord, psf=None, seed=None):
     rng = galsim.BaseDeviate(seed)
 
     # handle both scalar and vector inputs
-    mags = np.atleast_1d(mags)
+    mag = np.atleast_1d(mag)
     if coord.isscalar:
         coord = coord.reshape([1])
 
@@ -101,10 +101,10 @@ def inject_psf(image, mags, coord, psf=None, seed=None):
             [[pos.ra.deg, pos.dec.deg] for pos in coord], 1
         )
 
-        for mag, pos in zip(mags, ipos):
+        for m, pos in zip(mag, ipos):
 
             # calculate the measured flux of the object
-            flux = 10 ** (-0.4 * (mag - header['MAGZP']))
+            flux = 10 ** (-0.4 * (m - header['MAGZP']))
 
             image_pos = galsim.PositionD(*pos)
 
@@ -162,7 +162,7 @@ def inject_psf(image, mags, coord, psf=None, seed=None):
         hdul[-1].header.update(wcskeys)
 
         # add a record of the fakes as a bintable
-        record = {'fake_mag': mags,
+        record = {'fake_mag': mag,
                   'fake_ra': coord.ra.deg,
                   'fake_dec': coord.dec.deg,
                   'fake_x': ipos[:, 0],
