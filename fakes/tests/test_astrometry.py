@@ -49,5 +49,5 @@ def test_recovered_astrometry(science_image):
     i1, i2, sep, _ = insky.search_around_sky(outsky, seplimit=0.2 * u.arcsec)
 
     # assert that all fakes are detected and that measured fake positions
-    # agree with the input positions to within 0.5"
+    # agree with the input positions to within 0.2"
     assert len(i1) == N_FAKE
