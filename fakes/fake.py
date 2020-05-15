@@ -41,7 +41,7 @@ def measure_psf(image, persist=False):
     # write the output to a temporary directory
 
     if persist:
-        outdir = os.getcwd()
+        outdir = os.path.dirname(image)
     else:
         outdir = tempfile.mkdtemp()
 
@@ -83,7 +83,7 @@ def inject_psf(image, mags, coord, psf=None, seed=None):
     if coord.isscalar:
         coord = coord.reshape([1])
 
-    with fits.open(image, mode='r') as hdul:
+    with fits.open(image, mode='update') as hdul:
 
         # read in the WCS
         header = hdul[0].header
@@ -147,7 +147,7 @@ def inject_psf(image, mags, coord, psf=None, seed=None):
 
             # renomalize the image such that a PSF-weighted sum of the
             # object pixels would result in a value equal to `flux`
-            imout.array /= np.sum(imout.array * imout.array) / (flux * flux)
+            imout /= np.sum(imout.array * imout.array) / (flux * flux)
 
             # add the noise
             imout.addNoise(noise)
@@ -162,7 +162,8 @@ def inject_psf(image, mags, coord, psf=None, seed=None):
         galsim.fits.write(gimage, hdu_list=hdul)
 
         # propagate original WCS to output extension
-        hdul[-1].header = header
+        wcskeys = wcs.to_header(relax=True)
+        hdul[-1].header.update(wcskeys)
 
         # add a record of the fakes as a bintable
         record = {'fake_mag': mags,
@@ -173,6 +174,5 @@ def inject_psf(image, mags, coord, psf=None, seed=None):
 
         # save the bintable as an extension
         table = Table(record)
-        nhdu = fits.table_to_hdu(table)
+        nhdu = fits.BinTableHDU(table.as_array())
         hdul.append(nhdu)
-
