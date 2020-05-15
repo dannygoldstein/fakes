@@ -23,3 +23,5 @@ fakes.inject_psf(image='ztf_20181120510683_000718_zg_c01_o_q1_sciimg.fits', mag=
 ```
 
 ![fake image](https://user-images.githubusercontent.com/2769632/81816987-0e3f8480-94fa-11ea-81a5-ccd81cee8bf0.png)
+
+`mag` and `coord` can be floating-point / coordinate arrays respectively. The program will read in the pixel information from the first fits extension of the passed image. The program does not modify the original HDU. Instead, it writes it to a new image extension. A fits binary table is written to the final HDU providing the truth table for the injected fakes. 
