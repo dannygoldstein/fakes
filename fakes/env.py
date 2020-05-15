@@ -48,7 +48,7 @@ def check_dependencies(deps):
         except ValueError:
             print(
                 f'\n[!] Sorry, but our script could not parse the output of '
-                f'`{" ".join(cmd)}`; please file a bug, or see `zuds/env.py`\n'
+                f'`{" ".join(cmd)}`; please file a bug, or see `fakes/env.py`\n'
             )
             raise
         except Exception as e:
