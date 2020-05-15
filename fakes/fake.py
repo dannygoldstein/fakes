@@ -70,8 +70,6 @@ def inject_psf(image, mag, coord, psf=None, seed=None):
     """Realize the DES_PSFEx PSF model `psf` at location `coord` on
     ZTF science image `image` (image path) with magnitude `mag` in
     the AB system, fluctuated by Poisson noise.
-
-    If `image` is passed as an HDUlist, must be opened in update mode.
     """
 
     # initialize the random number generator
