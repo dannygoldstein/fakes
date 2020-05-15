@@ -1,4 +1,7 @@
 # fakes
+
+`$ pip install fakes`
+
 inject realistic fakes onto ztf science images
 
 requires `psfex >= 3.21.1`, `sextractor >= 2.18.0`
